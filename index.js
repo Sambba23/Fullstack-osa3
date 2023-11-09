@@ -1,9 +1,11 @@
 const express = require('express')
 var morgan = require('morgan')
+const cors = require('cors')
 const app = express()
 
 app.use(express.json())
 app.use(morgan('tiny'))
+app.use(cors())
 
 morgan.token('body', (req) => {
   return JSON.stringify(req.body);
@@ -15,22 +17,22 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :b
 let notes = [
   {
     id: 1,
-    content: "Arto Hellas",
+    name: "Arto Hellas",
     number: "040-123456"
   },
   {
     id: 2,
-    content: "billabong",
+    name: "billabong",
     number: "040-123356"
   },
   {
     id: 3,
-    content: "Arto dab",
+    name: "Arto dab",
     number: "040-113456"
   },
   {
     id: 4,
-    content: "Kaisla Kakkanen",
+    name: "Kaisla Kakkanen",
     number: "040-113456"
   },
 ]
@@ -45,13 +47,13 @@ const generateId = () => {
 app.post('/api/persons', (request, response) => {
   const body = request.body
 
-  if (!body.content || !body.number) {
+  if (!body.name|| !body.number) {
     return response.status(400).json({ 
       error: 'The name or number is missing.' 
     });
   }
 
-  if (notes.some(note => note.content === body.content || note.number === body.number)) {
+  if (notes.some(note => note.name === body.name || note.number === body.number)) {
     return response.status(400).json({ 
       error: 'Name or number already exists in the phonebook.' 
     });
@@ -59,7 +61,7 @@ app.post('/api/persons', (request, response) => {
   
   const note = {
     id: generateId(),
-    content: body.content,
+    name: body.name,
     number: body.number, 
   }
   
@@ -98,7 +100,7 @@ app.get('/info', (req, res) => {
     res.send(`${htmlContent}`);
   });
 
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
 console.log(`Server running on port ${PORT}`)
 })
