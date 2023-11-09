@@ -1,6 +1,16 @@
 const express = require('express')
+var morgan = require('morgan')
 const app = express()
+
 app.use(express.json())
+app.use(morgan('tiny'))
+
+morgan.token('body', (req) => {
+  return JSON.stringify(req.body);
+});
+
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
+
 
 let notes = [
   {
@@ -19,7 +29,7 @@ let notes = [
     number: "040-113456"
   },
   {
-    id: 3,
+    id: 4,
     content: "Kaisla Kakkanen",
     number: "040-113456"
   },
@@ -35,19 +45,25 @@ const generateId = () => {
 app.post('/api/persons', (request, response) => {
   const body = request.body
 
-  if (!body.content) {
+  if (!body.content || !body.number) {
     return response.status(400).json({ 
-      error: 'content missing' 
-    })
+      error: 'The name or number is missing.' 
+    });
   }
 
+  if (notes.some(note => note.content === body.content || note.number === body.number)) {
+    return response.status(400).json({ 
+      error: 'Name or number already exists in the phonebook.' 
+    });
+  }
+  
   const note = {
-    content: body.content,
     id: generateId(),
+    content: body.content,
+    number: body.number, 
   }
-
+  
   notes = notes.concat(note)
-
   response.json(note)
 })
 
