@@ -7,7 +7,7 @@ const app = express()
 app.use(express.json())
 app.use(morgan('tiny'))
 app.use(cors())
-app.use(express.static('build'))
+app.use(express.static('public'))
 
 
 morgan.token('body', (req) => {
@@ -16,7 +16,7 @@ morgan.token('body', (req) => {
 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 
