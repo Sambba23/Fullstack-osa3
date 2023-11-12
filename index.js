@@ -1,7 +1,7 @@
 const express = require('express')
 var morgan = require('morgan')
 const cors = require('cors')
-const path = require('path')
+
 const app = express()
 
 app.use(express.json())
@@ -15,9 +15,7 @@ morgan.token('body', (req) => {
 });
 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+
 
 
 let notes = [
