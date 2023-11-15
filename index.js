@@ -18,32 +18,23 @@ morgan.token('body', (req) => {
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
 
 
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
 
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  }
 
-const generateId = () => {
-  const maxId = notes.length > 0
-    ? Math.max(...notes.map(n => n.id))
-    : 0
-  return Math.floor(Math.random() * (10000 - maxId )) + maxId 
+  next(error)
 }
+
+app.use(errorHandler)
+
 
 app.post('/api/persons', (request, response) => {
   const body = request.body
-
-  if (!body.name|| !body.number) {
-    return response.status(400).json({ 
-      error: 'The name or number is missing.' 
-    });
-  }
-
-  if (Note.some(note => note.name === body.name || note.number === body.number)) {
-    return response.status(400).json({ 
-      error: 'Name or number already exists in the phonebook.' 
-    });
-  }
   
   const note = new Note({
-    id: generateId(),
     name: body.name,
     number: body.number, 
   })
@@ -53,41 +44,64 @@ app.post('/api/persons', (request, response) => {
   })
 })
 
-app.delete('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    Notes = Note.filter(note => note.id !== id)
-  
-    response.status(204).end()
-  })
-
-  app.get('/api/persons', (request, response) => {
-    Note.find({}).then(notes => {
-      response.json(notes)
+app.delete('/api/persons/:id', (request, response, next) => {
+  Note.findByIdAndRemove(request.params.id)
+    .then(result => {
+      if (result) {
+        response.status(204).end();
+      } else {
+        response.status(404).send({ error: 'Document not found' });
+      }
     })
+    .catch(error => next(error))
+});
+
+
+app.get('/api/persons', (request, response) => {
+  Note.find({}).then(notes => {
+    response.json(notes)
   })
+})
 
-app.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    
-    const note = Note.find({}).then(notes => {
-      response.json(notes)
-      })
+app.get('/api/persons/:id', (request, response, next) => {
+Note.findById(request.params.id)
+  .then(note => {
+    if (note) {
+      response.json(note)
+    } else {
+      response.status(404).end()
+    }
+  })
+  .catch(error => next(error))
+})
+
+app.get('/info', (req, res, next) => {
+  Note.countDocuments().then(count => {
+    const htmlContent = `
+      <div>
+        <p>Phonebook has info for ${count} people</p>
+        <p>${new Date()}</p>
+      </div>
+    `;
+    res.send(htmlContent);
+  }) 
+  .catch(error => next(error))
+});
+
+app.put('/api/persons/:id', (request, response, next) => {
+  const body = request.body
+
+  const note = {
+    name: body.name,
+    number: body.number, 
+  }
+
+  Note.findByIdAndUpdate(request.params.id, note, { new: true })
+    .then(updatedNote => {
+      response.json(updatedNote)
     })
-
-    app.get('/info', (req, res) => {
-      Note.countDocuments().then(count => {
-        const htmlContent = `
-          <div>
-            <p>Phonebook has info for ${count} people</p>
-            <p>${new Date()}</p>
-          </div>
-        `;
-        res.send(htmlContent);
-      }).catch(error => {
-        console.error('Error fetching count:', error);
-        res.status(500).send('Error fetching count');
-      });
-    });
+    .catch(error => next(error))
+})
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
