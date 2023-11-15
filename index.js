@@ -19,28 +19,6 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :b
 
 
 
-let notes = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "040-123456"
-  },
-  {
-    id: 2,
-    name: "billabong",
-    number: "040-123356"
-  },
-  {
-    id: 3,
-    name: "Arto dab",
-    number: "040-113456"
-  },
-  {
-    id: 4,
-    name: "Kaisla Kakkanen",
-    number: "040-113456"
-  },
-]
 
 const generateId = () => {
   const maxId = notes.length > 0
@@ -58,7 +36,7 @@ app.post('/api/persons', (request, response) => {
     });
   }
 
-  if (notes.some(note => note.name === body.name || note.number === body.number)) {
+  if (Note.some(note => note.name === body.name || note.number === body.number)) {
     return response.status(400).json({ 
       error: 'Name or number already exists in the phonebook.' 
     });
@@ -77,7 +55,7 @@ app.post('/api/persons', (request, response) => {
 
 app.delete('/api/persons/:id', (request, response) => {
     const id = Number(request.params.id)
-    notes = notes.filter(note => note.id !== id)
+    Notes = Note.filter(note => note.id !== id)
   
     response.status(204).end()
   })
@@ -90,23 +68,26 @@ app.delete('/api/persons/:id', (request, response) => {
 
 app.get('/api/persons/:id', (request, response) => {
     const id = Number(request.params.id)
-    const note = notes.find(note => note.id === id)
-    if (note) {
-        response.json(note)
-      } else {
-        response.status(404).end()
-      }
-  })
+    
+    const note = Note.find({}).then(notes => {
+      response.json(notes)
+      })
+    })
 
-app.get('/info', (req, res) => {
-    const htmlContent = `
-      <div>
-        <p>Phonebook has info for ${notes.length} people</p>
-        <p>${new Date()}</p>
-      </div>
-    `;
-    res.send(`${htmlContent}`);
-  });
+    app.get('/info', (req, res) => {
+      Note.countDocuments().then(count => {
+        const htmlContent = `
+          <div>
+            <p>Phonebook has info for ${count} people</p>
+            <p>${new Date()}</p>
+          </div>
+        `;
+        res.send(htmlContent);
+      }).catch(error => {
+        console.error('Error fetching count:', error);
+        res.status(500).send('Error fetching count');
+      });
+    });
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
