@@ -1,6 +1,7 @@
 const express = require('express')
 var morgan = require('morgan')
 const cors = require('cors')
+const Note = require('./mongo')
 
 const app = express()
 
@@ -63,14 +64,15 @@ app.post('/api/persons', (request, response) => {
     });
   }
   
-  const note = {
+  const note = new Note({
     id: generateId(),
     name: body.name,
     number: body.number, 
-  }
+  })
   
-  notes = notes.concat(note)
-  response.json(note)
+  note.save().then(savedNote => {
+    response.json(savedNote)
+  })
 })
 
 app.delete('/api/persons/:id', (request, response) => {
@@ -80,9 +82,11 @@ app.delete('/api/persons/:id', (request, response) => {
     response.status(204).end()
   })
 
-app.get('/api/persons', (req, res) => {
-res.json(notes)
-})
+  app.get('/api/persons', (request, response) => {
+    Note.find({}).then(notes => {
+      response.json(notes)
+    })
+  })
 
 app.get('/api/persons/:id', (request, response) => {
     const id = Number(request.params.id)
