@@ -8,7 +8,7 @@ const app = express()
 app.use(express.json())
 app.use(morgan('tiny'))
 app.use(cors())
-app.use(express.static('public/build'))
+app.use(express.static('public'))
 
 
 morgan.token('body', (req) => {
@@ -23,6 +23,8 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' })
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
   }
 
   next(error)
@@ -31,7 +33,7 @@ const errorHandler = (error, request, response, next) => {
 app.use(errorHandler)
 
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const body = request.body
   
   const note = new Note({
@@ -42,6 +44,7 @@ app.post('/api/persons', (request, response) => {
   note.save().then(savedNote => {
     response.json(savedNote)
   })
+  .catch(error => next(error))
 })
 
 app.delete('/api/persons/:id', (request, response, next) => {
@@ -89,14 +92,10 @@ app.get('/info', (req, res, next) => {
 });
 
 app.put('/api/persons/:id', (request, response, next) => {
-  const body = request.body
+  const { name, number } = request.body
 
-  const note = {
-    name: body.name,
-    number: body.number, 
-  }
-
-  Note.findByIdAndUpdate(request.params.id, note, { new: true })
+  Note.findByIdAndUpdate(
+    request.params.id, {name, number}, { new: true, runValidators: true, context: 'query' })
     .then(updatedNote => {
       response.json(updatedNote)
     })

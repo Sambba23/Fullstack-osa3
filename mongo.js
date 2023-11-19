@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 
-const url = process.env.MONGODB_URI
+const url = 'mongodb+srv://sampo:sampo123@cluster0.9sup55b.mongodb.net/?retryWrites=true&w=majority'
 
 mongoose.set('strictQuery', false)
 
@@ -15,7 +15,11 @@ mongoose.connect(url)
   })
 
 const personSchema = new mongoose.Schema({
-  name: String,
+  name: {
+    type: String,
+    minlength: 3,
+    required: true
+  },
   number: String,
 });
 
