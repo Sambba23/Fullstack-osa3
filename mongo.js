@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 
-const url = 'mongodb+srv://sampo:sampo123@cluster0.9sup55b.mongodb.net/?retryWrites=true&w=majority'
+const url = process.env.MONGODB_URI
 
 mongoose.set('strictQuery', false)
 
@@ -14,14 +14,14 @@ mongoose.connect(url)
     console.log('error connecting to MongoDB:', error.message)
   })
 
-const personSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    minlength: 3,
-    required: true
-  },
-  number: String,
-});
+  const personSchema = new mongoose.Schema({
+    name: {
+      type: String,
+      minlength: 3,
+      required: true
+    },
+    number: String,
+  });
 
 personSchema.set('toJSON', {
   transform: (document, returnedObject) => {
