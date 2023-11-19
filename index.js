@@ -12,10 +12,10 @@ app.use(express.static('public'))
 
 
 morgan.token('body', (req) => {
-  return JSON.stringify(req.body);
-});
+  return JSON.stringify(req.body)
+})
 
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
 
 const errorHandler = (error, request, response, next) => {
@@ -35,29 +35,29 @@ app.use(errorHandler)
 
 app.post('/api/persons', (request, response, next) => {
   const body = request.body
-  
+
   const note = new Note({
     name: body.name,
-    number: body.number, 
+    number: body.number,
   })
-  
+
   note.save().then(savedNote => {
     response.json(savedNote)
   })
-  .catch(error => next(error))
+    .catch(error => next(error))
 })
 
 app.delete('/api/persons/:id', (request, response, next) => {
   Note.findByIdAndRemove(request.params.id)
     .then(result => {
       if (result) {
-        response.status(204).end();
+        response.status(204).end()
       } else {
-        response.status(404).send({ error: 'Document not found' });
+        response.status(404).send({ error: 'Document not found' })
       }
     })
     .catch(error => next(error))
-});
+})
 
 
 app.get('/api/persons', (request, response) => {
@@ -67,15 +67,15 @@ app.get('/api/persons', (request, response) => {
 })
 
 app.get('/api/persons/:id', (request, response, next) => {
-Note.findById(request.params.id)
-  .then(note => {
-    if (note) {
-      response.json(note)
-    } else {
-      response.status(404).end()
-    }
-  })
-  .catch(error => next(error))
+  Note.findById(request.params.id)
+    .then(note => {
+      if (note) {
+        response.json(note)
+      } else {
+        response.status(404).end()
+      }
+    })
+    .catch(error => next(error))
 })
 
 app.get('/info', (req, res, next) => {
@@ -85,17 +85,17 @@ app.get('/info', (req, res, next) => {
         <p>Phonebook has info for ${count} people</p>
         <p>${new Date()}</p>
       </div>
-    `;
-    res.send(htmlContent);
-  }) 
-  .catch(error => next(error))
-});
+    `
+    res.send(htmlContent)
+  })
+    .catch(error => next(error))
+})
 
 app.put('/api/persons/:id', (request, response, next) => {
   const { name, number } = request.body
 
   Note.findByIdAndUpdate(
-    request.params.id, {name, number}, { new: true, runValidators: true, context: 'query' })
+    request.params.id, { name, number }, { new: true, runValidators: true, context: 'query' })
     .then(updatedNote => {
       response.json(updatedNote)
     })
@@ -104,5 +104,5 @@ app.put('/api/persons/:id', (request, response, next) => {
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
-console.log(`Server running on port ${PORT}`)
+  console.log(`Server running on port ${PORT}`)
 })
